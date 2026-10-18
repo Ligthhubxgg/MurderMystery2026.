@@ -1,0 +1,169 @@
+-- ServerScriptService -> MM2VisualsScript
+local Players = game:GetService("Players")
+
+-- Function para lumikha ng Overhead Tag at Glow Effect sa Character
+local function applyVisuals(character, roleName, roleColor)
+	local head = character:WaitForChild("Head", 5)
+	if not head then return end
+
+	-- Burahin ang lumang tag kung mayroon man
+	if head:FindFirstChild("OverheadGui") then
+		head.OverheadGui:Destroy()
+	end
+
+	-- 1. BillboardGui (Floating Tag sa taas ng Ulo)
+	local billboard = Instance.new("BillboardGui")
+	billboard.Name = "OverheadGui"
+	billboard.Size = UDim2.new(0, 200, 0, 50)
+	billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+	billboard.AlwaysOnTop = true
+	billboard.Parent = head
+
+	local mainFrame = Instance.new("Frame")
+	mainFrame.Size = UDim2.new(1, 0, 1, 0)
+	mainFrame.BackgroundTransparency = 1
+	mainFrame.Parent = billboard
+
+	-- Role Label
+	local roleLabel = Instance.new("TextLabel")
+	roleLabel.Size = UDim2.new(1, 0, 0.5, 0)
+	roleLabel.Position = UDim2.new(0, 0, 0, 0)
+	roleLabel.BackgroundTransparency = 1
+	roleLabel.Text = string.upper(roleName)
+	roleLabel.TextColor3 = roleColor
+	roleLabel.Font = Enum.Font.FredokaOne
+	roleLabel.TextSize = 20
+	roleLabel.TextStrokeTransparency = 0
+	roleLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	roleLabel.Parent = mainFrame
+
+	-- Player Name Label
+	local nameLabel = Instance.new("TextLabel")
+	nameLabel.Size = UDim2.new(1, 0, 0.5, 0)
+	nameLabel.Position = UDim2.new(0, 0, 0.5, 0)
+	nameLabel.BackgroundTransparency = 1
+	nameLabel.Text = character.Name
+	nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+	nameLabel.Font = Enum.Font.SourceSansBold
+	nameLabel.TextSize = 16
+	nameLabel.TextStrokeTransparency = 0
+	nameLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
+	nameLabel.Parent = mainFrame
+
+	-- 2. Character Glow (Highlight)
+	local highlight = character:FindFirstChild("RoleHighlight") or Instance.new("Highlight")
+	highlight.Name = "RoleHighlight"
+	highlight.FillColor = roleColor
+	highlight.FillTransparency = 0.7
+	highlight.OutlineColor = roleColor
+	highlight.OutlineTransparency = 0
+	highlight.Parent = character
+end
+
+-- Function para lumikha ng Client Control Panel UI sa PlayerGui
+local function createControlUI(player)
+	local playerGui = player:WaitForChild("PlayerGui")
+
+	if playerGui:FindFirstChild("MM2ControlGui") then
+		playerGui.MM2ControlGui:Destroy()
+	end
+
+	-- ScreenGui
+	local screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "MM2ControlGui"
+	screenGui.ResetOnSpawn = false
+	screenGui.Parent = playerGui
+
+	-- MainFrame (Panel)
+	local mainFrame = Instance.new("Frame")
+	mainFrame.Name = "MainFrame"
+	mainFrame.Size = UDim2.new(0, 220, 0, 130)
+	mainFrame.Position = UDim2.new(0.05, 0, 0.2, 0)
+	mainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+	mainFrame.BorderSizePixel = 0
+	mainFrame.Active = true
+	mainFrame.Draggable = true -- Pwedeng i-drag sa screen
+	mainFrame.Parent = screenGui
+
+	local frameCorner = Instance.new("UICorner")
+	frameCorner.CornerRadius = UDim.new(0, 10)
+	frameCorner.Parent = mainFrame
+
+	-- Title Label
+	local titleLabel = Instance.new("TextLabel")
+	titleLabel.Size = UDim2.new(1, 0, 0, 30)
+	titleLabel.Position = UDim2.new(0, 10, 0, 5)
+	titleLabel.BackgroundTransparency = 1
+	titleLabel.Text = "MM2 Visuals Panel"
+	titleLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+	titleLabel.Font = Enum.Font.SourceSansBold
+	titleLabel.TextSize = 16
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.Parent = mainFrame
+
+	-- Toggle Button sa loob ng Frame
+	local toggleButton = Instance.new("TextButton")
+	toggleButton.Name = "ToggleButton"
+	toggleButton.Size = UDim2.new(0.85, 0, 0.45, 0)
+	toggleButton.Position = UDim2.new(0.075, 0, 0.35, 0)
+	toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+	toggleButton.Text = "Visuals: ON"
+	toggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+	toggleButton.Font = Enum.Font.FredokaOne
+	toggleButton.TextSize = 18
+	toggleButton.Parent = mainFrame
+
+	local buttonCorner = Instance.new("UICorner")
+	buttonCorner.CornerRadius = UDim.new(0, 8)
+	buttonCorner.Parent = toggleButton
+
+	-- Subtitle Info
+	local infoLabel = Instance.new("TextLabel")
+	infoLabel.Size = UDim2.new(1, 0, 0, 20)
+	infoLabel.Position = UDim2.new(0, 0, 0.82, 0)
+	infoLabel.BackgroundTransparency = 1
+	infoLabel.Text = "[MM2 Control Panel]"
+	infoLabel.TextColor3 = Color3.fromRGB(120, 120, 120)
+	infoLabel.Font = Enum.Font.SourceSans
+	infoLabel.TextSize = 12
+	infoLabel.Parent = mainFrame
+
+	-- Local Logic para sa Toggle Click
+	local isEnabled = true
+	toggleButton.MouseButton1Click:Connect(function()
+		isEnabled = not isEnabled
+		local character = player.Character
+
+		if character then
+			local head = character:FindFirstChild("Head")
+			local highlight = character:FindFirstChild("RoleHighlight")
+
+			if head and head:FindFirstChild("OverheadGui") then
+				head.OverheadGui.Enabled = isEnabled
+			end
+
+			if highlight then
+				highlight.Enabled = isEnabled
+			end
+		end
+
+		if isEnabled then
+			toggleButton.Text = "Visuals: ON"
+			toggleButton.BackgroundColor3 = Color3.fromRGB(0, 180, 80)
+		else
+			toggleButton.Text = "Visuals: OFF"
+			toggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+		end
+	end)
+end
+
+-- Event kapag pumasok ang player sa laro
+Players.PlayerAdded:Connect(function(player)
+	createControlUI(player)
+
+	player.CharacterAdded:Connect(function(character)
+		-- Default role test: Innocent (Berde)
+		-- Pwede mong palitan ang "Innocent" at kulay depende sa game system mo
+		applyVisuals(character, "Innocent", Color3.fromRGB(85, 255, 127))
+	end)
+end)
